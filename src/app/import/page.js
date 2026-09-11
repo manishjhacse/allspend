@@ -141,17 +141,7 @@ function ImportPageInner() {
   }
 
   function handleGeminiError(msg) {
-    let cleanMsg = msg || 'Could not analyze the screenshot.';
-    if (
-      cleanMsg.includes('SyntaxError') ||
-      cleanMsg.includes('JSON') ||
-      cleanMsg.includes('position') ||
-      cleanMsg.includes('Unexpected token') ||
-      cleanMsg.includes('fetch failed')
-    ) {
-      cleanMsg = 'Could not read transaction details clearly from this screenshot. Please try another screenshot or add the expense manually.';
-    }
-    setError(cleanMsg);
+    setError(msg || 'Could not analyze the screenshot.');
     setStage('error');
   }
 
@@ -393,22 +383,40 @@ function ImportPageInner() {
 
         {/* Stage: error */}
         {stage === 'error' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16, paddingTop: 60 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16, paddingTop: 40 }}>
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 48, marginBottom: 16 }}>⚠️</div>
+              <div style={{ fontSize: 48, marginBottom: 16 }}>
+                {error === 'OFFLINE_ERROR' ? '📡' : error === 'ALLSPEND_QUOTA_EXHAUSTED' ? '⏳' : '⚠️'}
+              </div>
               <h2 style={{ fontSize: 18, fontWeight: 700, color: '#F5F5F5', marginBottom: 8 }}>
-                Couldn't analyze this screenshot
+                {error === 'OFFLINE_ERROR'
+                  ? "You're offline"
+                  : error === 'ALLSPEND_QUOTA_EXHAUSTED'
+                  ? 'Screenshot processing unavailable'
+                  : "Couldn't analyze this screenshot"}
               </h2>
-              <p style={{ fontSize: 13, color: '#8A8A8A', lineHeight: 1.6 }}>
-                {error || 'The image may be unclear or Gemini could not extract payment details.'}
+              <p style={{ fontSize: 13, color: '#8A8A8A', lineHeight: 1.6, maxWidth: 360, margin: '0 auto' }}>
+                {error === 'OFFLINE_ERROR'
+                  ? 'Screenshot processing requires internet access. You can still add this transaction manually.'
+                  : error === 'ALLSPEND_QUOTA_EXHAUSTED'
+                  ? "Your connected Gemini keys can't process this screenshot right now, and your 3 AllSpend backup reads for today have been used."
+                  : error || 'The screenshot could not be parsed confidently.'}
               </p>
             </div>
-            <button id="retry-btn" onClick={handleRetry} className="btn-secondary" style={{ fontSize: 14 }}>
-              Try Another Screenshot
-            </button>
+
             <button id="manual-fallback-btn" onClick={() => setStage('manual')} className="btn-primary" style={{ fontSize: 14 }}>
-              Add Manually
+              + Add Expense Manually
             </button>
+
+            {error === 'ALLSPEND_QUOTA_EXHAUSTED' ? (
+              <button onClick={() => router.push('/settings')} className="btn-secondary" style={{ fontSize: 14 }}>
+                Configure My Gemini Keys
+              </button>
+            ) : (
+              <button id="retry-btn" onClick={handleRetry} className="btn-secondary" style={{ fontSize: 14 }}>
+                Try Another Screenshot
+              </button>
+            )}
           </div>
         )}
       </div>

@@ -150,12 +150,15 @@ function CategoryManager({ categories, addCategory, renameCategory, deleteCatego
 
 // ─── Settings Page ────────────────────────────────────────────────────────
 
+import { GeminiKeyManager } from '@/components/settings/GeminiKeyManager';
+
 export default function SettingsPage() {
   const addToast = useAppToast();
   const { categories, addCategory, renameCategory, deleteCategory } = useCategories();
   const { mappings, setMapping, deleteMapping } = useMerchantMappings();
   const [clearModal, setClearModal] = useState(false);
   const [showCategories, setShowCategories] = useState(false);
+  const [showGeminiKeys, setShowGeminiKeys] = useState(false);
   const [userName, setUserName] = useState('Manish');
   const [salary, setSalary] = useState('');
   const [budget, setBudget] = useState('');
@@ -306,6 +309,7 @@ export default function SettingsPage() {
         {/* ── PREFERENCES section ────────────────────────────────────────── */}
         <p className="section-header" style={{ padding: '0 20px 8px' }}>PREFERENCES</p>
         <div style={{ margin: '0 20px 24px', background: '#0D0D0D', border: '1px solid #1A1A1A', borderRadius: 14, overflow: 'hidden' }}>
+          <SettingsRow icon="🔑" label="Gemini Keys & Quota" value="Configure API keys & view fallback usage" onClick={() => setShowGeminiKeys(true)} />
           <SettingsRow icon="🏷️" label="Edit Categories" value="Manage expense categories" onClick={() => setShowCategories(true)} />
         </div>
 
@@ -326,6 +330,12 @@ export default function SettingsPage() {
           </p>
         </div>
       </div>
+
+      <GeminiKeyManager
+        isOpen={showGeminiKeys}
+        onClose={() => setShowGeminiKeys(false)}
+        addToast={addToast}
+      />
 
       <ConfirmModal
         isOpen={clearModal}

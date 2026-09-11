@@ -233,6 +233,15 @@ export const merchantMappingOps = {
   },
 };
 
+// Helper to get local date string YYYY-MM-DD
+export function getLocalDateString() {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 // ─── Settings Operations ─────────────────────────────────────────────────────
 
 export const settingsOps = {
@@ -244,3 +253,93 @@ export const settingsOps = {
     return db.settings.put({ key, value });
   },
 };
+
+// ─── User Gemini Key Operations ──────────────────────────────────────────────
+
+export const userKeyOps = {
+  async getAllKeys() {
+    const keys = await settingsOps.get('userGeminiKeys', []);
+    return Array.isArray(keys) ? keys : [];
+  },
+
+  async addKey(rawKey, label = '') {
+    const cleanKey = rawKey.trim();
+    if (!cleanKey) throw new Error('API key cannot be empty.');
+
+    const keys = await userKeyOps.getAllKeys();
+    if (keys.some((k) => k.key === cleanKey)) {
+      throw new Error('This API key is already added.');
+    }
+
+    const newKeyObj = {
+      id: `key_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+      key: cleanKey,
+      label: label.trim() || `Key ${keys.length + 1}`,
+      enabled: true,
+      status: 'unknown', // 'active' | 'temporarily_unavailable' | 'invalid' | 'unknown'
+      lastCheckedAt: null,
+      cooldownUntil: null,
+      createdAt: new Date().toISOString(),
+    };
+
+    const updated = [...keys, newKeyObj];
+    await settingsOps.set('userGeminiKeys', updated);
+    return newKeyObj;
+  },
+
+  async removeKey(id) {
+    const keys = await userKeyOps.getAllKeys();
+    const updated = keys.filter((k) => k.id !== id);
+    await settingsOps.set('userGeminiKeys', updated);
+  },
+
+  async toggleKey(id, enabled) {
+    const keys = await userKeyOps.getAllKeys();
+    const updated = keys.map((k) => (k.id === id ? { ...k, enabled } : k));
+    await settingsOps.set('userGeminiKeys', updated);
+  },
+
+  async updateKeyStatus(id, status, cooldownUntil = null) {
+    const keys = await userKeyOps.getAllKeys();
+    const updated = keys.map((k) =>
+      k.id === id
+        ? {
+            ...k,
+            status,
+            cooldownUntil: cooldownUntil ? new Date(cooldownUntil).toISOString() : null,
+            lastCheckedAt: new Date().toISOString(),
+          }
+        : k
+    );
+    await settingsOps.set('userGeminiKeys', updated);
+  },
+};
+
+// ─── AllSpend Fallback Quota Operations ───────────────────────────────────────
+
+export const fallbackQuotaOps = {
+  async getStatus() {
+    const today = getLocalDateString();
+    const record = await settingsOps.get('allspend_fallback_quota', { date: today, used: 0 });
+
+    if (!record || record.date !== today) {
+      const resetRecord = { date: today, used: 0 };
+      await settingsOps.set('allspend_fallback_quota', resetRecord);
+      return { date: today, used: 0, available: 3 };
+    }
+
+    const used = Math.min(3, Math.max(0, Number(record.used) || 0));
+    return { date: today, used, available: Math.max(0, 3 - used) };
+  },
+
+  async consume() {
+    const status = await fallbackQuotaOps.getStatus();
+    if (status.used >= 3) {
+      return { success: false, ...status };
+    }
+    const newUsed = status.used + 1;
+    await settingsOps.set('allspend_fallback_quota', { date: status.date, used: newUsed });
+    return { success: true, date: status.date, used: newUsed, available: 3 - newUsed };
+  },
+};
+
