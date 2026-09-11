@@ -1,114 +1,72 @@
 import { NextResponse } from 'next/server';
 import { executeWithKeyRotation, getGeminiApiKeys } from '@/lib/ai/keyRotator';
 
-const EXTRACTION_PROMPT = `You are a payment transaction extraction system for AllSpend.
+const RECEIPT_RESPONSE_SCHEMA = {
+  type: 'OBJECT',
+  properties: {
+    isPaymentScreenshot: { type: 'BOOLEAN' },
+    transactionType: { type: 'STRING', enum: ['expense', 'income', 'refund', 'failed', 'pending'] },
+    status: { type: 'STRING', enum: ['success', 'failed', 'pending', 'refunded'] },
+    amount: { type: 'NUMBER', nullable: true },
+    currency: { type: 'STRING' },
+    merchant: { type: 'STRING', nullable: true },
+    sender: { type: 'STRING', nullable: true },
+    receiver: { type: 'STRING', nullable: true },
+    date: { type: 'STRING', nullable: true },
+    time: { type: 'STRING', nullable: true },
+    paymentMethod: { type: 'STRING', nullable: true },
+    paymentApp: { type: 'STRING', nullable: true },
+    transactionId: { type: 'STRING', nullable: true },
+    referenceId: { type: 'STRING', nullable: true },
+    utr: { type: 'STRING', nullable: true },
+    upiId: { type: 'STRING', nullable: true },
+    bank: { type: 'STRING', nullable: true },
+    cashback: { type: 'NUMBER', nullable: true },
+    category: { type: 'STRING', nullable: true },
+    confidence: {
+      type: 'OBJECT',
+      properties: {
+        amount: { type: 'NUMBER' },
+        merchant: { type: 'NUMBER' },
+        date: { type: 'NUMBER' },
+        time: { type: 'NUMBER' },
+        transactionType: { type: 'NUMBER' },
+      },
+    },
+  },
+  required: ['isPaymentScreenshot', 'currency'],
+};
 
-Analyze the provided payment screenshot carefully.
+const EXTRACTION_PROMPT = `You are an expert financial transaction extraction system for AllSpend.
 
-The screenshot may come from any Indian UPI/payment application, including Google Pay, PhonePe, Paytm, BHIM, Navi, Super.money, bank applications, or an unknown payment application.
+Analyze the provided payment screenshot carefully and extract the transaction details with maximum precision.
 
-Do not assume a particular app or layout.
+1. PRIMARY TRANSACTION AMOUNT IDENTIFICATION:
+- Locate the main monetary number for the payment transaction.
+- If text like "Paid", "Sent", or "Debited" is present, the amount is the monetary value (₹, Rs, INR) attached to that action.
+- If NO action words exist (only green checkmark ✔, success tick, or status icon), the transaction amount is the monetary value visually paired with the checkmark and receiver name.
+- EXCLUSION RULES (STRICT):
+  * NEVER extract account balance (e.g. "Bal ₹12,450", "Available Balance", "Updated Bal").
+  * NEVER extract account numbers (e.g. "A/c **4321", "Ending in 9812").
+  * NEVER extract cashback/rewards (e.g. "Earned ₹10", "Scratched Card").
+  * NEVER extract transaction/reference/UTR numbers (e.g. "428918231").
 
-Understand the complete screenshot visually and extract the actual transaction information.
+2. MERCHANT / COUNTERPARTY NAME IDENTIFICATION:
+- Extract the actual Person or Business who received the money (e.g. after "Paid to", "Sent to", "To", or in the primary header title).
+- CLEANUP RULES:
+  * Remove raw UPI handles in parentheses: convert "Rahul Sharma (rahul@okaxis)" to "Rahul Sharma".
+  * If only a business handle is present (e.g. "swiggy@icici"), format it cleanly as "Swiggy".
+  * NEVER use bank names ("HDFC Bank", "SBI", "ICICI", "Axis Bank") as the merchant name unless it's a direct bank fee.
+  * NEVER use generic action words ("UPI Payment", "Paid", "Transfer", "Self") as the merchant name.
 
-Most importantly, identify the PRIMARY TRANSACTION AMOUNT.
+3. APP & METADATA DETECTION:
+- Identify paymentApp: Return any payment or bank app name as string (e.g. "Google Pay", "PhonePe", "Paytm", "Amazon Pay", "WhatsApp Pay", "Airtel Thanks", "BHIM", "Navi", "Super.money", "CRED", "ICICI iMobile", "HDFC Bank", "SBI YONO", etc.) or null if unknown.
+- Identify paymentMethod: "UPI" | "Debit Card" | "Credit Card" | "Wallet" | "Net Banking" | "Cash" | "Other" | null.
+- Date/Time: Normalize date to "YYYY-MM-DD" and time to 24-hour "HH:mm". If date/year is missing, use current year (2026).
+- Categories: Food, Shopping, Travel, Groceries, Rent, Investments, Health, EMI/Bill, Subscriptions, Entertainment, Education, Personal, Others.
 
-Do not simply select the first number or first currency value.
-
-The screenshot may contain:
-- Transaction amount
-- Cashback
-- Rewards
-- Discount
-- Date
-- Time
-- Phone number
-- Account number
-- UPI ID
-- Transaction ID
-- UTR
-- Reference number
-- Bank account suffix
-- Other unrelated numbers
-
-Determine what each number represents from the visual and textual context.
-
-For example, if the screenshot contains:
-Paid ₹500
-Cashback ₹100
-the transaction amount is ₹500 and cashback is ₹100.
-
-If the screenshot contains:
-Money Received
-₹50
-the transaction type is income.
-
-If the screenshot contains:
-Payment Failed
-₹500
-the transaction should be classified as failed, not as a successful expense.
-
-Never invent information. If a field cannot be determined confidently, return null.
-
-For the category field, use one of: Food, Shopping, Travel, Groceries, Rent, Investments, Health, EMI/Bill, Subscriptions, Entertainment, Education, Personal, Others
-- Zomato, Swiggy → Food
-- Blinkit, Zepto, BigBasket → Groceries
-- Amazon, Flipkart, Myntra → Shopping
-- Uber, Ola, Rapido, IRCTC → Travel
-- Netflix, Spotify, YouTube Premium → Subscriptions
-- If uncertain → Others
-
-For date/time, normalize to: date: YYYY-MM-DD, time: HH:mm (24-hour)
-
-Supported date formats from screenshots:
-September 9 at 8:58 PM → 2026-09-09, 20:58
-9 Sept 2026, 9:55 PM → 2026-09-09, 21:55
-12 Jul 2026, 3:06 PM → 2026-07-12, 15:06
-07:42 PM on 10 Sep 2026 → 2026-09-10, 19:42
-08:48 PM, 16 Aug 2026 → 2026-08-16, 20:48
-
-For paymentApp, identify from the screenshot's UI (logo, color scheme, typography):
-- Google Pay (green/white, "GPay" branding)
-- PhonePe (purple)
-- Paytm (blue)
-- BHIM (tricolor)
-- Navi, Super.money
-If not identifiable, return null.
-
-Return ONLY valid JSON matching the schema below.
-Do not return markdown.
-Do not return explanations.
-Do not return code fences.
-Return raw JSON only.
-
-{
-  "isPaymentScreenshot": boolean (true if image is a payment receipt, UPI transfer, bank statement, or payment app screenshot; false if image is not a payment receipt),
-  "transactionType": "expense" | "income" | "refund" | "failed" | "pending",
-  "status": "success" | "failed" | "pending" | "refunded",
-  "amount": number or null,
-  "currency": "INR",
-  "merchant": string or null,
-  "sender": string or null,
-  "receiver": string or null,
-  "date": "YYYY-MM-DD" or null,
-  "time": "HH:mm" or null,
-  "paymentMethod": "UPI" | "Debit Card" | "Credit Card" | "Wallet" | "Net Banking" | null,
-  "paymentApp": "Google Pay" | "PhonePe" | "Paytm" | "BHIM" | "Navi" | "Super.money" | null,
-  "transactionId": string or null,
-  "referenceId": string or null,
-  "utr": string or null,
-  "upiId": string or null,
-  "bank": string or null,
-  "cashback": number or null,
-  "category": "Food" | "Shopping" | "Travel" | "Groceries" | "Rent" | "Investments" | "Health" | "EMI/Bill" | "Subscriptions" | "Entertainment" | "Education" | "Personal" | "Others" | null,
-  "confidence": {
-    "amount": number,
-    "merchant": number,
-    "date": number,
-    "time": number,
-    "transactionType": number
-  }
-}`;
+4. OUTPUT FORMAT:
+Return valid JSON matching the exact schema requested.`;
 
 /**
  * Safely parse JSON returned by Gemini Vision.
@@ -243,6 +201,7 @@ export async function POST(request) {
               ],
               generationConfig: {
                 response_mime_type: 'application/json',
+                response_schema: RECEIPT_RESPONSE_SCHEMA,
                 temperature: 0.1,
                 maxOutputTokens: 1024,
               },

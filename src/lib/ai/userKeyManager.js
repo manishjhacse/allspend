@@ -1,5 +1,41 @@
 import { userKeyOps } from '@/lib/db';
 
+export const RECEIPT_RESPONSE_SCHEMA = {
+  type: 'OBJECT',
+  properties: {
+    isPaymentScreenshot: { type: 'BOOLEAN' },
+    transactionType: { type: 'STRING', enum: ['expense', 'income', 'refund', 'failed', 'pending'] },
+    status: { type: 'STRING', enum: ['success', 'failed', 'pending', 'refunded'] },
+    amount: { type: 'NUMBER', nullable: true },
+    currency: { type: 'STRING' },
+    merchant: { type: 'STRING', nullable: true },
+    sender: { type: 'STRING', nullable: true },
+    receiver: { type: 'STRING', nullable: true },
+    date: { type: 'STRING', nullable: true },
+    time: { type: 'STRING', nullable: true },
+    paymentMethod: { type: 'STRING', nullable: true },
+    paymentApp: { type: 'STRING', nullable: true },
+    transactionId: { type: 'STRING', nullable: true },
+    referenceId: { type: 'STRING', nullable: true },
+    utr: { type: 'STRING', nullable: true },
+    upiId: { type: 'STRING', nullable: true },
+    bank: { type: 'STRING', nullable: true },
+    cashback: { type: 'NUMBER', nullable: true },
+    category: { type: 'STRING', nullable: true },
+    confidence: {
+      type: 'OBJECT',
+      properties: {
+        amount: { type: 'NUMBER' },
+        merchant: { type: 'NUMBER' },
+        date: { type: 'NUMBER' },
+        time: { type: 'NUMBER' },
+        transactionType: { type: 'NUMBER' },
+      },
+    },
+  },
+  required: ['isPaymentScreenshot', 'currency'],
+};
+
 /**
  * Mask an API key string for safe display in UI.
  * e.g. "AIzaSyD-7k9p8x4q2m" -> "••••••••4q2m"
@@ -114,6 +150,7 @@ export async function executeWithUserKeys(imageBase64, imageMimeType, promptText
             ],
             generationConfig: {
               response_mime_type: 'application/json',
+              response_schema: RECEIPT_RESPONSE_SCHEMA,
               temperature: 0.1,
               maxOutputTokens: 1024,
             },

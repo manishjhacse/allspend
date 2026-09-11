@@ -1,19 +1,38 @@
 import { executeWithUserKeys } from '@/lib/ai/userKeyManager';
 import { fallbackQuotaOps } from '@/lib/db';
 
-const EXTRACTION_PROMPT = `You are a payment transaction extraction system for AllSpend.
+const EXTRACTION_PROMPT = `You are an expert financial transaction extraction system for AllSpend.
 
-Analyze the provided payment screenshot carefully.
-Understand the complete screenshot visually and extract the actual transaction information.
-Most importantly, identify the PRIMARY TRANSACTION AMOUNT.
+Analyze the provided payment screenshot carefully and extract the transaction details with maximum precision.
 
-Supported categories: Food, Shopping, Travel, Groceries, Rent, Investments, Health, EMI/Bill, Subscriptions, Entertainment, Education, Personal, Others
-Supported date/time: normalize to date: YYYY-MM-DD, time: HH:mm (24-hour)
-Supported paymentApp: Google Pay, PhonePe, Paytm, BHIM, Navi, Super.money or null
+1. PRIMARY TRANSACTION AMOUNT IDENTIFICATION:
+- Locate the main monetary number for the payment transaction.
+- If text like "Paid", "Sent", or "Debited" is present, the amount is the monetary value (₹, Rs, INR) attached to that action.
+- If NO action words exist (only green checkmark ✔, success tick, or status icon), the transaction amount is the monetary value visually paired with the checkmark and receiver name.
+- EXCLUSION RULES (STRICT):
+  * NEVER extract account balance (e.g. "Bal ₹12,450", "Available Balance", "Updated Bal").
+  * NEVER extract account numbers (e.g. "A/c **4321", "Ending in 9812").
+  * NEVER extract cashback/rewards (e.g. "Earned ₹10", "Scratched Card").
+  * NEVER extract transaction/reference/UTR numbers (e.g. "428918231").
 
+2. MERCHANT / COUNTERPARTY NAME IDENTIFICATION:
+- Extract the actual Person or Business who received the money (e.g. after "Paid to", "Sent to", "To", or in the primary header title).
+- CLEANUP RULES:
+  * Remove raw UPI handles in parentheses: convert "Rahul Sharma (rahul@okaxis)" to "Rahul Sharma".
+  * If only a business handle is present (e.g. "swiggy@icici"), format it cleanly as "Swiggy".
+  * NEVER use bank names ("HDFC Bank", "SBI", "ICICI", "Axis Bank") as the merchant name unless it's a direct bank fee.
+  * NEVER use generic action words ("UPI Payment", "Paid", "Transfer", "Self") as the merchant name.
+
+3. APP & METADATA DETECTION:
+- Identify paymentApp: Return any payment or bank app name as string (e.g. "Google Pay", "PhonePe", "Paytm", "Amazon Pay", "WhatsApp Pay", "Airtel Thanks", "BHIM", "Navi", "Super.money", "CRED", "ICICI iMobile", "HDFC Bank", "SBI YONO", etc.) or null if unknown.
+- Identify paymentMethod: "UPI" | "Debit Card" | "Credit Card" | "Wallet" | "Net Banking" | "Cash" | "Other" | null.
+- Date/Time: Normalize date to "YYYY-MM-DD" and time to 24-hour "HH:mm". If date/year is missing, use current year (2026).
+- Categories: Food, Shopping, Travel, Groceries, Rent, Investments, Health, EMI/Bill, Subscriptions, Entertainment, Education, Personal, Others.
+
+4. OUTPUT FORMAT:
 Return ONLY valid JSON matching the schema below:
 {
-  "isPaymentScreenshot": boolean (true if image is a payment receipt, UPI transfer, bank statement, or payment app screenshot; false if image is not a payment receipt),
+  "isPaymentScreenshot": boolean,
   "transactionType": "expense" | "income" | "refund" | "failed" | "pending",
   "status": "success" | "failed" | "pending" | "refunded",
   "amount": number or null,
@@ -23,8 +42,8 @@ Return ONLY valid JSON matching the schema below:
   "receiver": string or null,
   "date": "YYYY-MM-DD" or null,
   "time": "HH:mm" or null,
-  "paymentMethod": "UPI" | "Debit Card" | "Credit Card" | "Wallet" | "Net Banking" | null,
-  "paymentApp": "Google Pay" | "PhonePe" | "Paytm" | "BHIM" | "Navi" | "Super.money" | null,
+  "paymentMethod": "UPI" | "Debit Card" | "Credit Card" | "Wallet" | "Net Banking" | "Cash" | "Other" | null,
+  "paymentApp": string or null,
   "transactionId": string or null,
   "referenceId": string or null,
   "utr": string or null,
