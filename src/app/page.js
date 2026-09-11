@@ -7,6 +7,7 @@ import { initDB, settingsOps } from '@/lib/db';
 import { formatCurrency, getMonthName, percentChange } from '@/lib/formatters';
 import { ExpenseCard } from '@/components/expenses/ExpenseCard';
 import Link from 'next/link';
+import { PWAInstallBanner } from '@/components/ui/PWAInstall';
 
 // ─── Category Colours ─────────────────────────────────────────────────────
 
@@ -172,6 +173,11 @@ export default function HomePage() {
             Your Monthly Expenses
           </h1>
           <MonthNav year={year} month={month} onPrev={goToPrevMonth} onNext={goToNextMonth} />
+        </div>
+
+        {/* ── PWA Install Banner ───────────────────────────────────────── */}
+        <div style={{ padding: '0 20px' }}>
+          <PWAInstallBanner />
         </div>
 
         {/* ── Amount ───────────────────────────────────────────────────── */}

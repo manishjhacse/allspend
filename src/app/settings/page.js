@@ -9,6 +9,7 @@ import { exportBackupJSON, importBackupJSON, exportCSV, clearAllData } from '@/l
 import { initDB, settingsOps, expenseOps } from '@/lib/db';
 import { formatCurrency } from '@/lib/formatters';
 import { useMonthlyExpenses } from '@/hooks/useExpenses';
+import { PWAInstallRow } from '@/components/ui/PWAInstall';
 
 // ─── Settings Row ─────────────────────────────────────────────────────────
 
@@ -309,6 +310,7 @@ export default function SettingsPage() {
         {/* ── PREFERENCES section ────────────────────────────────────────── */}
         <p className="section-header" style={{ padding: '0 20px 8px' }}>PREFERENCES</p>
         <div style={{ margin: '0 20px 24px', background: '#0D0D0D', border: '1px solid #1A1A1A', borderRadius: 14, overflow: 'hidden' }}>
+          <PWAInstallRow />
           <SettingsRow icon="🔑" label="Gemini Keys & Quota" value="Configure API keys & view fallback usage" onClick={() => setShowGeminiKeys(true)} />
           <SettingsRow icon="🏷️" label="Edit Categories" value="Manage expense categories" onClick={() => setShowCategories(true)} />
         </div>

@@ -2,6 +2,8 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { usePWAInstall } from '@/hooks/usePWAInstall';
+import { PWAInstallModal } from '@/components/ui/PWAInstall';
 
 // ─── Icons ────────────────────────────────────────────────────────────────
 
@@ -54,6 +56,16 @@ function PlusIcon() {
   );
 }
 
+function DownloadIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="7 10 12 15 17 10" />
+      <line x1="12" y1="15" x2="12" y2="3" />
+    </svg>
+  );
+}
+
 // ─── Nav Items ────────────────────────────────────────────────────────────
 
 const navItems = [
@@ -70,7 +82,7 @@ export function BottomNav() {
   const router = useRouter();
 
   return (
-    <nav className="bottom-nav-bar">
+    <nav className="bottom-nav-bar lg:hidden">
       {/* First two nav items */}
       {navItems.slice(0, 2).map(({ href, label, Icon }) => {
         const active = pathname === href || (href !== '/' && pathname.startsWith(href));
@@ -126,6 +138,7 @@ export function BottomNav() {
 
 export function SideNav() {
   const pathname = usePathname();
+  const { isInstalled, triggerInstall, showIOSModal, setShowIOSModal, isIOS } = usePWAInstall();
 
   return (
     <nav
@@ -166,8 +179,29 @@ export function SideNav() {
         })}
       </div>
 
-      {/* Import button */}
-      <div className="px-3 py-4" style={{ borderTop: '1px solid #1A1A1A' }}>
+      {/* Import & Install buttons */}
+      <div className="px-3 py-4 flex flex-col gap-2.5" style={{ borderTop: '1px solid #1A1A1A' }}>
+        {!isInstalled && (
+          <button
+            onClick={triggerInstall}
+            className="btn-secondary"
+            style={{
+              fontSize: 13,
+              minHeight: 38,
+              width: '100%',
+              justifyContent: 'center',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              borderColor: 'rgba(0, 200, 83, 0.3)',
+              color: '#00C853',
+              background: 'rgba(0, 200, 83, 0.06)',
+            }}
+          >
+            <DownloadIcon />
+            Install App
+          </button>
+        )}
         <Link href="/import">
           <button className="btn-primary" style={{ fontSize: 13, minHeight: 42 }}>
             <PlusIcon />
@@ -175,6 +209,12 @@ export function SideNav() {
           </button>
         </Link>
       </div>
+
+      <PWAInstallModal
+        isOpen={showIOSModal}
+        onClose={() => setShowIOSModal(false)}
+        isIOS={isIOS}
+      />
     </nav>
   );
 }

@@ -407,6 +407,12 @@ a {
   height: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom));
 }
 
+@media (min-width: 1024px) {
+  .bottom-nav-bar {
+    display: none !important;
+  }
+}
+
 /* ─── Tab Bar ────────────────────────────────────────────────────────────── */
 
 .tab-bar {
