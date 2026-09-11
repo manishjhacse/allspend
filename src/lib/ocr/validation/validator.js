@@ -51,6 +51,15 @@ export function validateTransaction(rawData) {
     data.amount = Math.round(data.amount * 100) / 100;
   }
 
+  // Validate if image is a payment screenshot
+  if (data.isPaymentScreenshot === false) {
+    throw new Error('NOT_A_PAYMENT_SCREENSHOT');
+  }
+
+  if (data.amount === null && (!data.merchant || data.merchant.trim().toLowerCase() === 'unknown')) {
+    throw new Error('NOT_A_PAYMENT_SCREENSHOT');
+  }
+
   // Transaction type
   if (!VALID_TYPES.has(data.transactionType)) {
     data.transactionType = 'expense';

@@ -13,6 +13,7 @@ Supported paymentApp: Google Pay, PhonePe, Paytm, BHIM, Navi, Super.money or nul
 
 Return ONLY valid JSON matching the schema below:
 {
+  "isPaymentScreenshot": boolean (true if image is a payment receipt, UPI transfer, bank statement, or payment app screenshot; false if image is not a payment receipt),
   "transactionType": "expense" | "income" | "refund" | "failed" | "pending",
   "status": "success" | "failed" | "pending" | "refunded",
   "amount": number or null,
@@ -109,6 +110,7 @@ function formatTransactionObject(txn, source = 'gemini_vision') {
   }
 
   return {
+    isPaymentScreenshot: txn.isPaymentScreenshot !== false,
     transactionType: txn.transactionType || 'expense',
     status: txn.status || 'success',
     amount: typeof txn.amount === 'number' ? txn.amount : null,

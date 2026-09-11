@@ -108,6 +108,88 @@ export function ExpenseConfirmation({ parsed, categories, onSave, onManual, onCa
     await onSave({ ...expense, source: 'screenshot' });
   }
 
+  // ── Non-payment screenshot check ──────────────────────────────────────────
+  if (parsed?.isPaymentScreenshot === false || (amount === null && merchant === 'Unknown')) {
+    return (
+      <ClientPortal>
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.85)',
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
+            zIndex: 9999,
+            display: 'flex',
+            alignItems: 'flex-end',
+            justifyContent: 'center',
+          }}
+        >
+          <div
+            className="modal-inner"
+            style={{
+              position: 'relative',
+              background: '#111111',
+              borderRadius: '24px 24px 0 0',
+              width: '100%',
+              maxWidth: 480,
+              padding: '32px 24px 40px',
+              border: '1px solid #242424',
+              borderBottom: 'none',
+              textAlign: 'center',
+            }}
+          >
+            {onCancel && (
+              <button
+                onClick={onCancel}
+                aria-label="Cancel"
+                style={{
+                  position: 'absolute',
+                  top: 14,
+                  right: 16,
+                  width: 28,
+                  height: 28,
+                  borderRadius: '50%',
+                  background: 'rgba(255, 68, 68, 0.15)',
+                  border: '1px solid rgba(255, 68, 68, 0.4)',
+                  color: '#FF4444',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 13,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  zIndex: 10,
+                }}
+              >
+                ✕
+              </button>
+            )}
+
+            <div style={{ fontSize: 44, marginBottom: 14 }}>🧾</div>
+            <h2 style={{ fontSize: 18, fontWeight: 700, color: '#F5F5F5', marginBottom: 8 }}>
+              We cannot process this receipt
+            </h2>
+            <p style={{ fontSize: 13, color: '#8A8A8A', lineHeight: 1.6, marginBottom: 24 }}>
+              This image does not appear to be a valid payment screenshot. Try adding the expense manually.
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <button onClick={onManual} className="btn-primary" style={{ minHeight: 46, fontSize: 14 }}>
+                + Add Expense Manually
+              </button>
+              {onCancel && (
+                <button onClick={onCancel} className="btn-secondary" style={{ minHeight: 44, fontSize: 13 }}>
+                  Try Another Screenshot
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      </ClientPortal>
+    );
+  }
+
   // ── Edit mode: full form ──────────────────────────────────────────────────
 
   if (showEdit) {

@@ -82,6 +82,7 @@ Do not return code fences.
 Return raw JSON only.
 
 {
+  "isPaymentScreenshot": boolean (true if image is a payment receipt, UPI transfer, bank statement, or payment app screenshot; false if image is not a payment receipt),
   "transactionType": "expense" | "income" | "refund" | "failed" | "pending",
   "status": "success" | "failed" | "pending" | "refunded",
   "amount": number or null,
