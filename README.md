@@ -40,7 +40,7 @@ It works seamlessly offline, supports Android Web Share Target (share payment re
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/your-username/allspend.git
+   git clone https://github.com/manishjhacse/allspend.git
    cd allspend
    ```
 
