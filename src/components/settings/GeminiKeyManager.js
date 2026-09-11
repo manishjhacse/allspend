@@ -37,7 +37,6 @@ export function GeminiKeyManager({ isOpen, onClose, addToast }) {
 
     setAdding(true);
     try {
-      // Perform quick verification test before saving
       const testRes = await testUserKey(cleanKey);
       if (!testRes.ok) {
         addToast?.(`Verification warning: ${testRes.error}`, 'error');
@@ -96,90 +95,103 @@ export function GeminiKeyManager({ isOpen, onClose, addToast }) {
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: '#050505', zIndex: 60, overflowY: 'auto' }}>
-      <div style={{ padding: '52px 20px 100px', maxWidth: 540, margin: '0 auto' }}>
+      <div style={{ padding: '24px 20px max(110px, calc(env(safe-area-inset-bottom) + 90px))', maxWidth: 480, margin: '0 auto' }}>
+        
         {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 20, paddingTop: 12 }}>
           <button
             onClick={onClose}
             style={{
               background: '#151515',
               border: '1px solid #242424',
               borderRadius: '50%',
-              width: 34,
-              height: 34,
+              width: 36,
+              height: 36,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer',
               color: '#8A8A8A',
               fontSize: 18,
+              flexShrink: 0,
             }}
             aria-label="Back"
           >
             ←
           </button>
-          <h2 style={{ fontSize: 18, fontWeight: 700, color: '#F5F5F5' }}>Gemini Keys & Quota</h2>
-        </div>
-
-        {/* Local Security Badge */}
-        <div
-          style={{
-            background: 'rgba(0, 200, 83, 0.08)',
-            border: '1px solid rgba(0, 200, 83, 0.25)',
-            borderRadius: 14,
-            padding: '14px 16px',
-            marginBottom: 20,
-            display: 'flex',
-            alignItems: 'flex-start',
-            gap: 12,
-          }}
-        >
-          <span style={{ fontSize: 18, lineHeight: 1 }}>🔒</span>
-          <div>
-            <p style={{ fontSize: 13, fontWeight: 600, color: '#00C853', marginBottom: 2 }}>
-              100% Local Storage Security
-            </p>
-            <p style={{ fontSize: 12, color: '#8A8A8A', lineHeight: 1.5 }}>
-              Your Gemini API keys are stored on this device only. They are never sent to AllSpend servers, analytics, or transaction logs.
+          <div style={{ minWidth: 0 }}>
+            <h2 style={{ fontSize: 18, fontWeight: 700, color: '#F5F5F5', letterSpacing: '-0.3px' }}>
+              Gemini Keys & Quota
+            </h2>
+            <p style={{ fontSize: 12, color: '#555555', marginTop: 1 }}>
+              Configure API keys & view backup limit
             </p>
           </div>
+        </div>
+
+        {/* Local Security Banner */}
+        <div
+          style={{
+            background: 'rgba(0, 200, 83, 0.06)',
+            border: '1px solid rgba(0, 200, 83, 0.2)',
+            borderRadius: 12,
+            padding: '10px 14px',
+            marginBottom: 16,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+          }}
+        >
+          <span style={{ fontSize: 14, lineHeight: 1 }}>🔒</span>
+          <p style={{ fontSize: 12, color: '#00C853', fontWeight: 500, margin: 0, lineHeight: 1.4 }}>
+            Keys are stored 100% locally on your device and never sent to servers.
+          </p>
         </div>
 
         {/* User Keys Card */}
         <div
           style={{
             background: '#0D0D0D',
-            border: '1px solid #1A1A1A',
+            border: '1px solid #1C1C1C',
             borderRadius: 16,
-            padding: '18px 16px',
-            marginBottom: 20,
+            padding: '16px',
+            marginBottom: 14,
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 14 }}>
             <div>
-              <h3 style={{ fontSize: 15, fontWeight: 700, color: '#F5F5F5' }}>Your Gemini API Keys</h3>
-              <p style={{ fontSize: 12, color: '#555555', marginTop: 2 }}>
-                Used first with unlimited reads
+              <h3 style={{ fontSize: 14, fontWeight: 700, color: '#F5F5F5' }}>Personal Gemini Keys</h3>
+              <p style={{ fontSize: 11, color: '#555555', marginTop: 1 }}>
+                Tried first · Unlimited reads
               </p>
             </div>
             <button
               onClick={() => setShowAddModal(true)}
               className="btn-primary"
-              style={{ width: 'auto', fontSize: 12, padding: '6px 12px', minHeight: 34 }}
+              style={{
+                width: 'auto',
+                fontSize: 12,
+                fontWeight: 600,
+                padding: '6px 14px',
+                minHeight: 32,
+                borderRadius: 100,
+                whiteSpace: 'nowrap',
+                flexShrink: 0,
+              }}
             >
               + Add Key
             </button>
           </div>
 
           {keys.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '24px 12px', border: '1px dashed #242424', borderRadius: 12 }}>
-              <p style={{ fontSize: 13, color: '#8A8A8A', marginBottom: 6 }}>No personal Gemini keys added</p>
-              <p style={{ fontSize: 11, color: '#555555' }}>
-                Add your free key from Google AI Studio to process unlimited screenshots.
+            <div style={{ textAlign: 'center', padding: '20px 12px', border: '1px dashed #242424', borderRadius: 12, background: '#0A0A0A' }}>
+              <p style={{ fontSize: 13, fontWeight: 600, color: '#8A8A8A', marginBottom: 4 }}>No personal Gemini keys</p>
+              <p style={{ fontSize: 11, color: '#555555', margin: 0 }}>
+                Get a free key from Google AI Studio (aistudio.google.com) to process unlimited screenshots.
               </p>
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {keys.map((k) => {
                 const isCooldown = k.status === 'temporarily_unavailable' && k.cooldownUntil && new Date(k.cooldownUntil) > new Date();
                 return (
@@ -187,41 +199,41 @@ export function GeminiKeyManager({ isOpen, onClose, addToast }) {
                     key={k.id}
                     style={{
                       background: '#141414',
-                      border: '1px solid #242424',
+                      border: '1px solid #222222',
                       borderRadius: 12,
-                      padding: '12px 14px',
+                      padding: '10px 12px',
                       opacity: k.enabled ? 1 : 0.55,
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                      <div>
-                        <span style={{ fontSize: 14, fontWeight: 600, color: '#F5F5F5', marginRight: 8 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 6 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+                        <span style={{ fontSize: 13, fontWeight: 600, color: '#F5F5F5', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {k.label || 'Gemini Key'}
                         </span>
-                        <code style={{ fontSize: 12, color: '#8A8A8A', background: '#0A0A0A', padding: '2px 6px', borderRadius: 4 }}>
+                        <code style={{ fontSize: 11, color: '#8A8A8A', background: '#0A0A0A', padding: '2px 6px', borderRadius: 4, fontFamily: 'monospace' }}>
                           {maskKey(k.key)}
                         </code>
                       </div>
 
                       {/* Enable/Disable Toggle */}
-                      <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', gap: 6 }}>
+                      <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', gap: 5, flexShrink: 0 }}>
                         <input
                           type="checkbox"
                           checked={k.enabled}
                           onChange={() => handleToggleKey(k.id, k.enabled)}
-                          style={{ accentColor: '#00C853', width: 16, height: 16 }}
+                          style={{ accentColor: '#00C853', width: 15, height: 15 }}
                         />
-                        <span style={{ fontSize: 11, color: '#555555' }}>{k.enabled ? 'Active' : 'Off'}</span>
+                        <span style={{ fontSize: 11, color: '#555555' }}>{k.enabled ? 'On' : 'Off'}</span>
                       </label>
                     </div>
 
-                    {/* Status Badge & Action buttons */}
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 6, borderTop: '1px solid #1F1F1F' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    {/* Status Badge & Actions */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 6, borderTop: '1px solid #1E1E1E' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                         <span
                           style={{
-                            width: 7,
-                            height: 7,
+                            width: 6,
+                            height: 6,
                             borderRadius: '50%',
                             background: !k.enabled
                               ? '#555555'
@@ -238,16 +250,16 @@ export function GeminiKeyManager({ isOpen, onClose, addToast }) {
                           {!k.enabled
                             ? 'Disabled'
                             : isCooldown
-                            ? 'Temporarily Limit Reached'
+                            ? 'Quota Limit Reached'
                             : k.status === 'active'
                             ? 'Healthy'
                             : k.status === 'invalid'
                             ? 'Invalid Key'
-                            : 'Not tested yet'}
+                            : 'Untested'}
                         </span>
                       </div>
 
-                      <div style={{ display: 'flex', gap: 10 }}>
+                      <div style={{ display: 'flex', gap: 12 }}>
                         <button
                           onClick={() => handleTestKey(k)}
                           disabled={testingId === k.id || !k.enabled}
@@ -260,7 +272,7 @@ export function GeminiKeyManager({ isOpen, onClose, addToast }) {
                             fontWeight: 600,
                           }}
                         >
-                          {testingId === k.id ? 'Testing...' : 'Test Key'}
+                          {testingId === k.id ? 'Testing...' : 'Test'}
                         </button>
                         <button
                           onClick={() => handleRemoveKey(k.id, k.label)}
@@ -281,34 +293,36 @@ export function GeminiKeyManager({ isOpen, onClose, addToast }) {
         <div
           style={{
             background: '#0D0D0D',
-            border: '1px solid #1A1A1A',
+            border: '1px solid #1C1C1C',
             borderRadius: 16,
-            padding: '18px 16px',
-            marginBottom: 20,
+            padding: '16px',
+            marginBottom: 14,
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-            <h3 style={{ fontSize: 15, fontWeight: 700, color: '#F5F5F5' }}>AllSpend Backup Quota</h3>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 8 }}>
+            <h3 style={{ fontSize: 14, fontWeight: 700, color: '#F5F5F5' }}>AllSpend Backup Quota</h3>
             <span
               style={{
-                fontSize: 12,
+                fontSize: 11,
                 fontWeight: 700,
-                padding: '4px 10px',
+                padding: '3px 10px',
                 borderRadius: 100,
-                background: quotaStatus.available > 0 ? 'rgba(0, 200, 83, 0.15)' : 'rgba(255, 68, 68, 0.15)',
+                whiteSpace: 'nowrap',
+                background: quotaStatus.available > 0 ? 'rgba(0, 200, 83, 0.12)' : 'rgba(255, 68, 68, 0.12)',
                 color: quotaStatus.available > 0 ? '#00C853' : '#FF4444',
-                border: `1px solid ${quotaStatus.available > 0 ? 'rgba(0, 200, 83, 0.3)' : 'rgba(255, 68, 68, 0.3)'}`,
+                border: `1px solid ${quotaStatus.available > 0 ? 'rgba(0, 200, 83, 0.25)' : 'rgba(255, 68, 68, 0.25)'}`,
+                flexShrink: 0,
               }}
             >
-              {quotaStatus.available} of 3 available today
+              {quotaStatus.available} of 3 available
             </span>
           </div>
 
-          <p style={{ fontSize: 12, color: '#8A8A8A', lineHeight: 1.5, marginBottom: 12 }}>
-            Your personal Gemini keys are always tried first. If none can process a screenshot, AllSpend provides up to 3 additional backup reads each day.
+          <p style={{ fontSize: 11, color: '#8A8A8A', lineHeight: 1.5, marginBottom: 12 }}>
+            Used automatically when your personal keys are not configured or hit rate limits. Resets daily.
           </p>
 
-          <div style={{ display: 'flex', gap: 6, height: 6, borderRadius: 3, background: '#1A1A1A', overflow: 'hidden' }}>
+          <div style={{ display: 'flex', gap: 6, height: 5, borderRadius: 3, background: '#1A1A1A', overflow: 'hidden' }}>
             {[1, 2, 3].map((slot) => {
               const isUsed = slot <= quotaStatus.used;
               return (
@@ -325,23 +339,23 @@ export function GeminiKeyManager({ isOpen, onClose, addToast }) {
           </div>
         </div>
 
-        {/* Manual Entry Note */}
+        {/* Manual Entry Status */}
         <div
           style={{
             background: '#0D0D0D',
-            border: '1px solid #1A1A1A',
+            border: '1px solid #1C1C1C',
             borderRadius: 16,
-            padding: '16px',
+            padding: '14px 16px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
           }}
         >
           <div>
-            <p style={{ fontSize: 13, fontWeight: 600, color: '#F5F5F5' }}>Manual Entry</p>
-            <p style={{ fontSize: 12, color: '#555555', marginTop: 1 }}>Add income or expenses manually anytime</p>
+            <p style={{ fontSize: 13, fontWeight: 600, color: '#F5F5F5', margin: 0 }}>Manual Entry</p>
+            <p style={{ fontSize: 11, color: '#555555', margin: '2px 0 0' }}>Add transactions manually anytime</p>
           </div>
-          <span style={{ fontSize: 12, fontWeight: 700, color: '#00C853', background: 'rgba(0,200,83,0.1)', padding: '4px 10px', borderRadius: 100 }}>
+          <span style={{ fontSize: 11, fontWeight: 700, color: '#00C853', background: 'rgba(0,200,83,0.1)', padding: '3px 10px', borderRadius: 100 }}>
             Unlimited
           </span>
         </div>
