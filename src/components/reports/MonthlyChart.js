@@ -12,7 +12,6 @@ function formatYAxis(v) {
 }
 
 export function MonthlyChart({ data }) {
-  // data: [{month: 0-11, total: number}]
   if (!data || data.length === 0) return null;
 
   const chartData = data.map((d) => ({
@@ -21,32 +20,35 @@ export function MonthlyChart({ data }) {
   }));
 
   return (
-    <ResponsiveContainer width="100%" height={200}>
-      <BarChart data={chartData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#E3E9E6" vertical={false} />
+    <ResponsiveContainer width="100%" height={210}>
+      <BarChart data={chartData} margin={{ top: 12, right: 8, left: -16, bottom: 0 }}>
+        <CartesianGrid strokeDasharray="3 3" stroke="#222222" vertical={false} />
         <XAxis
           dataKey="name"
-          tick={{ fontSize: 11, fill: '#66736D' }}
+          tick={{ fontSize: 12, fill: '#8A8A8A' }}
           axisLine={false}
           tickLine={false}
         />
         <YAxis
           tickFormatter={formatYAxis}
-          tick={{ fontSize: 11, fill: '#66736D' }}
+          tick={{ fontSize: 11, fill: '#8A8A8A' }}
           axisLine={false}
           tickLine={false}
-          width={36}
+          width={40}
         />
         <Tooltip
           formatter={(v) => [formatCurrency(v), 'Spent']}
           contentStyle={{
-            background: '#FFFFFF',
-            border: '1px solid #E3E9E6',
-            borderRadius: 8,
+            background: '#151515',
+            border: '1px solid #282828',
+            borderRadius: 12,
             fontSize: 13,
+            color: '#F5F5F5',
+            boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
           }}
+          itemStyle={{ color: '#00C853', fontWeight: 600 }}
         />
-        <Bar dataKey="amount" fill="#159A68" radius={[4, 4, 0, 0]} maxBarSize={40} />
+        <Bar dataKey="amount" fill="#00C853" radius={[6, 6, 0, 0]} maxBarSize={36} />
       </BarChart>
     </ResponsiveContainer>
   );

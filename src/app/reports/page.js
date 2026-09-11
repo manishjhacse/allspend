@@ -24,10 +24,22 @@ function MonthNav({ year, month, onPrev, onNext }) {
 
 function StatCard({ label, value, sub }) {
   return (
-    <div style={{ background: '#0D0D0D', border: '1px solid #1A1A1A', borderRadius: 14, padding: '14px 16px', flex: 1 }}>
-      <p style={{ fontSize: 10, color: '#555555', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em' }}>{label}</p>
-      <p style={{ fontSize: 20, fontWeight: 700, color: '#F5F5F5', marginTop: 6, letterSpacing: '-0.5px' }}>{value}</p>
-      {sub && <p style={{ fontSize: 11, color: '#555555', marginTop: 2 }}>{sub}</p>}
+    <div
+      style={{
+        background: '#0F0F0F',
+        border: '1px solid #1F1F1F',
+        borderRadius: 16,
+        padding: '16px 18px',
+        flex: 1,
+      }}
+    >
+      <p style={{ fontSize: 11, color: '#8A8A8A', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+        {label}
+      </p>
+      <p style={{ fontSize: 22, fontWeight: 800, color: '#F5F5F5', marginTop: 6, letterSpacing: '-0.6px', fontVariantNumeric: 'tabular-nums' }}>
+        {value}
+      </p>
+      {sub && <p style={{ fontSize: 11, color: '#666666', marginTop: 2 }}>{sub}</p>}
     </div>
   );
 }
@@ -180,8 +192,8 @@ export default function ReportsPage() {
 
           {/* Category chart */}
           {categoryData.length > 0 && (
-            <div style={{ margin: '0 20px 24px', background: '#0D0D0D', border: '1px solid #1A1A1A', borderRadius: 14, padding: 16 }}>
-              <p style={{ fontSize: 10, color: '#555555', textTransform: 'uppercase', letterSpacing: '0.07em', fontWeight: 600, marginBottom: 12 }}>
+            <div style={{ margin: '0 20px 24px', background: '#0F0F0F', border: '1px solid #1F1F1F', borderRadius: 20, padding: 20 }}>
+              <p style={{ fontSize: 11, color: '#8A8A8A', textTransform: 'uppercase', letterSpacing: '0.07em', fontWeight: 600, marginBottom: 14 }}>
                 By Category
               </p>
               <CategoryChart data={categoryData} />
