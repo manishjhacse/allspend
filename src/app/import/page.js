@@ -147,18 +147,25 @@ function ImportPageInner() {
 
   const isShared = searchParams?.get('shared') === '1';
 
+  function handleCloseShared() {
+    try {
+      window.close();
+    } catch (e) {}
+    setTimeout(() => {
+      router.replace('/');
+    }, 100);
+  }
+
   async function handleSave(expense) {
     try {
       await expenseOps.add(expense);
-      addToast?.('Expense saved ✓');
       if (isShared) {
+        setStage('saved');
         setTimeout(() => {
-          try {
-            window.close();
-          } catch (e) {}
-          router.push('/');
-        }, 300);
+          handleCloseShared();
+        }, 700);
       } else {
+        addToast?.('Expense saved ✓');
         router.push('/');
       }
     } catch (err) {
@@ -228,7 +235,7 @@ function ImportPageInner() {
               imageFile={imageFile}
               onComplete={handleGeminiComplete}
               onError={handleGeminiError}
-              onCancel={() => window.close()}
+              onCancel={handleCloseShared}
             />
           )}
 
@@ -239,9 +246,48 @@ function ImportPageInner() {
               categories={categories}
               onSave={handleSave}
               onManual={() => setStage('manual')}
-              onCancel={() => window.close()}
+              onCancel={handleCloseShared}
               duplicate={duplicate}
             />
+          )}
+
+          {/* Stage: saved */}
+          {stage === 'saved' && (
+            <div
+              className="card-elevated"
+              style={{
+                padding: '36px 24px',
+                borderRadius: 24,
+                textAlign: 'center',
+                background: '#111111',
+                border: '1px solid rgba(0, 200, 83, 0.3)',
+                animation: 'modal-in 0.25s cubic-bezier(0.32, 0.72, 0, 1)',
+              }}
+            >
+              <div
+                style={{
+                  width: 52,
+                  height: 52,
+                  borderRadius: '50%',
+                  background: 'rgba(0, 200, 83, 0.15)',
+                  border: '1px solid rgba(0, 200, 83, 0.3)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 16px auto',
+                  color: '#00C853',
+                  boxShadow: '0 0 24px rgba(0, 200, 83, 0.2)',
+                }}
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              </div>
+              <h3 style={{ fontSize: 18, fontWeight: 700, color: '#F5F5F5', marginBottom: 4 }}>
+                Expense Saved!
+              </h3>
+              <p style={{ fontSize: 13, color: '#8A8A8A' }}>Closing window…</p>
+            </div>
           )}
 
           {/* Stage: error */}
@@ -264,7 +310,7 @@ function ImportPageInner() {
                 {error || 'The screenshot could not be parsed confidently.'}
               </p>
               <div style={{ display: 'flex', gap: 10 }}>
-                <button onClick={() => window.close()} className="btn-secondary" style={{ flex: 1, minHeight: 44, fontSize: 13 }}>
+                <button onClick={handleCloseShared} className="btn-secondary" style={{ flex: 1, minHeight: 44, fontSize: 13 }}>
                   Close
                 </button>
                 <button onClick={() => setStage('manual')} className="btn-primary" style={{ flex: 1, minHeight: 44, fontSize: 13 }}>
@@ -291,7 +337,7 @@ function ImportPageInner() {
               <ExpenseForm
                 categories={categories}
                 onSubmit={handleSave}
-                onCancel={() => window.close()}
+                onCancel={handleCloseShared}
                 submitLabel="Save Expense"
               />
             </div>
